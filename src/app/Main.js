@@ -35,7 +35,7 @@ class Main extends Component {
   }
 
   onButtonClick() {
-    window.location = "/pdf_files/" + this.state.text + "_lh0.01_le16.0_min_min.pdf";
+    window.location = "pdf_files/" + this.state.text + "_lh0.01_le16.0_min_min.pdf";
   }
 
   updateText(text) {
