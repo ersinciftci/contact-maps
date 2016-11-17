@@ -10,11 +10,15 @@ import FlatButton from 'material-ui/FlatButton';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import axios from 'axios';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 
 const styles = {
   container: {
     textAlign: 'center',
-    paddingTop: 200,
+  },
+  customWidth: {
+    width: 200,
   },
 };
 
@@ -31,73 +35,95 @@ class Main extends Component {
     this.onPfamButtonClick = this.onPfamButtonClick.bind(this);
     this.onPdbButtonClick = this.onPdbButtonClick.bind(this);
     this.onPdbChange = this.onPdbChange.bind(this);
-    this.onUniProtAccButtonClick = this.onUniProtAccButtonClick.bind(this);
-    this.onUniProtAccChange = this.onUniProtAccChange.bind(this);
-    this.onUniProtIdButtonClick = this.onUniProtIdButtonClick.bind(this);
-    this.onUniProtIdChange = this.onUniProtIdChange.bind(this);
-    this.onInterProButtonClick = this.onInterProButtonClick.bind(this);
-    this.onInterProChange = this.onInterProChange.bind(this);
     this.onTextChange = this.onTextChange.bind(this);
     this.onNewRequest = this.onNewRequest.bind(this);
     this.updateText = this.updateText.bind(this);
-    this.state = {pfam: "", pdb: "", uniprotAcc: "", uniprotId: "", interpro: "", disabled: true,
+    this.handleAccessionChange = this.handleAccessionChange.bind(this);
+    this.state = {pfam: "", pdb: "", disabled: true, value: 1, hintText: "PDB ID", url : "",
       datasource: ["PF00028", "PF00029", "PF00030", "PF00031", "PF00032", "PF00033", "PF00034"]};
   }
 
+  handleAccessionChange(event, index, value) {
+
+    if (value == 1) {
+      this.state.hintText = "PDB ID";
+    }  else if (value == 2) {
+      this.state.hintText = "UniProt Accession";
+    } else if (value == 3) {
+      this.state.hintText = "UniProt Identifier";
+    } else if (value == 4) {
+      this.state.hintText = "InterPro Accession";
+    }
+
+    this.state.value = value;
+    this.state.pdb = "";
+    this.setState(this.state);
+  }
+
   onPfamButtonClick() {
-    window.location = "pdf_files/" + this.state.pfam + "_lh0.01_le16.0_min_min.pdf";
+    this.state.url = "png/" + this.state.pfam + "_lh0.01_le16.0_med_min.png";
+    this.setState(this.state);
   }
 
   onPdbButtonClick() {
 
-    axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + this.state.pdb)
-        .then(response => {
-          this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+    var value = this.state.value;
+    if(value == 1) {
+      axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + this.state.pdb)
+          .then(response => {
+            this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+    } else if (value == 2) {
+      axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + this.state.pdb)
+          .then(response => {
+            this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+    } else if (value == 3) {
+      axios.get('http://www.uniprot.org/uniprot/' + this.state.pdb + '.xml')
+          .then(response => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(response.data, "application/xml");
+            var uniprotAcc = doc.documentElement.childNodes[1].childNodes[1].textContent;
+            axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + uniprotAcc)
+                .then(response => {
+                  this.updateText(Object.keys(response.data[uniprotAcc]['Pfam'])[0]);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                });
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+    } else if (value == 4) {
+      axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/' + this.state.pdb)
+          .then(response => {
+            var interProAcc = Object.keys(response.data[this.state.pdb]['PDB'])[0];
+            axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + interProAcc)
+                .then(response => {
+                  this.updateText(Object.keys(response.data[interProAcc]['Pfam'])[0]);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                });
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+    }
   }
 
   onPdbChange(event) {
 
     this.state.pdb = event.target.value;
+    this.setState(this.state);
   }
-
-  onUniProtAccButtonClick() {
-
-    axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + this.state.uniprotAcc)
-        .then(response => {
-          this.updateText(Object.keys(response.data[this.state.uniprotAcc]['Pfam'])[0]);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-  }
-
-  onUniProtAccChange(event) {
-
-    this.state.uniprotAcc = event.target.value;
-  }
-
-  onUniProtIdButtonClick() {
-
-  }
-
-  onUniProtIdChange(event) {
-
-    this.state.uniprotId = event.target.value;
-  }
-
-  onInterProButtonClick() {
-
-  }
-
-  onInterProChange(event) {
-
-    this.state.interpro = event.target.value;
-  }
-
 
   updateText(text) {
     this.state.pfam = text;
@@ -135,22 +161,30 @@ class Main extends Component {
                 maxSearchResults={5}
                 searchText={this.state.pfam}
             />
-            <FlatButton secondary={true} label="Open PDF" onClick={this.onPfamButtonClick} disabled={this.state.disabled}/>
+            <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick} disabled={this.state.disabled}/>
           </div>
           <div>OR</div>
+          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+            <div style={{ marginRight: 10}}>
+              <SelectField
+                  value={this.state.value}
+                  onChange={this.handleAccessionChange}
+                  style={styles.customWidth}
+              >
+                <MenuItem value={1} primaryText="PDB ID" />
+                <MenuItem value={2} primaryText="UniProt Accession" />
+                <MenuItem value={3} primaryText="UniProt Identifier" />
+                <MenuItem value={4} primaryText="InterPro Accession" />
+              </SelectField>
+            </div>
+            <div>
+              <TextField hintText={this.state.hintText} value={this.state.pdb} onChange={this.onPdbChange}/>
+              <FlatButton secondary={true} label="Fetch PFAM ID" onClick={this.onPdbButtonClick}/>
+              <br />
+            </div>
+          </div>
           <div>
-            <TextField hintText="PDB ID" onChange={this.onPdbChange}/>
-            <FlatButton secondary={true} label="Fetch PFAM ID" onClick={this.onPdbButtonClick}/>
-            <br />
-            <TextField hintText="UniProt Accession" onChange={this.onUniProtAccChange}/>
-            <FlatButton secondary={true} label="Fetch PFAM ID" onClick={this.onUniProtAccButtonClick}/>
-            <br />
-            <TextField hintText="UniProt Identifier" onChange={this.onUniProtIdChange}/>
-            <FlatButton secondary={true} label="Fetch PFAM ID" onClick={this.onUniProtIdButtonClick}/>
-            <br />
-            <TextField hintText="InterPro Accession" onChange={this.onInterProChange}/>
-            <FlatButton secondary={true} label="Fetch PFAM ID" onClick={this.onInterProButtonClick}/>
-            <br />
+            <img src={this.state.url} width="680" style={{display: this.state.url == '' ? 'none' : ''}}/>
           </div>
         </div>
       </MuiThemeProvider>
