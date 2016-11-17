@@ -104,10 +104,10 @@ class Main extends Component {
     } else if (value == 4) {
       axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/' + this.state.pdb)
           .then(response => {
-            var interProAcc = Object.keys(response.data[this.state.pdb]['PDB'])[0];
-            axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + interProAcc)
+            var pdbId = Object.keys(response.data[this.state.pdb]['PDB'])[0];
+            axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + pdbId)
                 .then(response => {
-                  this.updateText(Object.keys(response.data[interProAcc]['Pfam'])[0]);
+                  this.updateText(Object.keys(response.data[pdbId]['Pfam'])[0]);
                 })
                 .catch(function (error) {
                   console.log(error);
