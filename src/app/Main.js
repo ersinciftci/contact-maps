@@ -2,8 +2,7 @@
  * In this file, we create a React component
  * which incorporates components provided by Material-UI.
  */
-import React, {Component} from 'react';
-import AutoComplete from 'material-ui/AutoComplete';
+import React, {Component} from 'react';;
 import TextField from 'material-ui/TextField';
 import {deepOrange500} from 'material-ui/styles/colors';
 import FlatButton from 'material-ui/FlatButton';
@@ -12,6 +11,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import axios from 'axios';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
+import RefreshIndicator from 'material-ui/RefreshIndicator';
 
 const styles = {
   container: {
@@ -19,6 +19,10 @@ const styles = {
   },
   customWidth: {
     width: 200,
+  },
+  refresh: {
+    display: 'inline-block',
+    position: 'relative',
   },
 };
 
@@ -36,11 +40,10 @@ class Main extends Component {
     this.onPdbButtonClick = this.onPdbButtonClick.bind(this);
     this.onPdbChange = this.onPdbChange.bind(this);
     this.onTextChange = this.onTextChange.bind(this);
-    this.onNewRequest = this.onNewRequest.bind(this);
     this.updateText = this.updateText.bind(this);
     this.handleAccessionChange = this.handleAccessionChange.bind(this);
-    this.state = {pfam: "", pdb: "", disabled: true, value: 1, hintText: "PDB ID", url : "",
-      datasource: ["PF00028", "PF00029", "PF00030", "PF00031", "PF00032", "PF00033", "PF00034"]};
+    this.onStateReady = this.onStateReady.bind(this);
+    this.state = {pfam: "", pdb: "", value: 1, hintText: "PDB ID", url : "", imageHidden: false, refresh: "hide"};
   }
 
   handleAccessionChange(event, index, value) {
@@ -62,26 +65,40 @@ class Main extends Component {
 
   onPfamButtonClick() {
     this.state.url = "png/" + this.state.pfam + "_lh0.01_le16.0_med_min.png";
-    this.setState(this.state);
+    axios.get(this.state.url)
+        .then(response => {
+          this.state.imageHidden = false;
+          this.setState(this.state);
+        })
+        .catch(error => {
+          this.state.imageHidden = true;
+          this.setState(this.state);
+        });
   }
 
   onPdbButtonClick() {
 
+    this.state.refresh = "loading";
+    this.setState(this.state);
     var value = this.state.value;
     if(value == 1) {
       axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + this.state.pdb)
           .then(response => {
+            this.onStateReady();
             this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
           })
-          .catch(function (error) {
+          .catch(error => {
+            this.onStateReady();
             console.log(error);
           });
     } else if (value == 2) {
       axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + this.state.pdb)
           .then(response => {
+            this.onStateReady();
             this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
           })
-          .catch(function (error) {
+          .catch(error => {
+            this.onStateReady();
             console.log(error);
           });
     } else if (value == 3) {
@@ -92,13 +109,16 @@ class Main extends Component {
             var uniprotAcc = doc.documentElement.childNodes[1].childNodes[1].textContent;
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + uniprotAcc)
                 .then(response => {
+                  this.onStateReady();
                   this.updateText(Object.keys(response.data[uniprotAcc]['Pfam'])[0]);
                 })
-                .catch(function (error) {
+                .catch(error => {
+                  this.onStateReady();
                   console.log(error);
                 });
           })
-          .catch(function (error) {
+          .catch(error => {
+            this.onStateReady();
             console.log(error);
           });
     } else if (value == 4) {
@@ -107,16 +127,24 @@ class Main extends Component {
             var pdbId = Object.keys(response.data[this.state.pdb]['PDB'])[0];
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + pdbId)
                 .then(response => {
+                  this.onStateReady();
                   this.updateText(Object.keys(response.data[pdbId]['Pfam'])[0]);
                 })
-                .catch(function (error) {
+                .catch(error => {
+                  this.onStateReady();
                   console.log(error);
                 });
           })
-          .catch(function (error) {
+          .catch(error => {
+            this.onStateReady();
             console.log(error);
           });
     }
+  }
+
+  onStateReady() {
+    this.state.refresh = "hide";
+    this.setState(this.state);
   }
 
   onPdbChange(event) {
@@ -127,22 +155,11 @@ class Main extends Component {
 
   updateText(text) {
     this.state.pfam = text;
-
-    if (this.state.datasource.indexOf(text) > -1) {
-      this.state.disabled = false;
-    } else {
-      this.state.disabled = true;
-    }
-
     this.setState(this.state);
   }
 
-  onTextChange(searchText, dataSource) {
-    this.updateText(searchText);
-  }
-
-  onNewRequest(chosenRequest, index) {
-    this.updateText(chosenRequest);
+  onTextChange(event) {
+    this.updateText(event.target.value);
   }
 
   render() {
@@ -151,17 +168,8 @@ class Main extends Component {
         <div style={styles.container}>
           <h1>Contact Maps</h1>
           <div>
-            <AutoComplete
-                floatingLabelText="PFAM ID"
-                filter={AutoComplete.caseInsensitiveFilter}
-                openOnFocus={true}
-                dataSource={this.state.datasource}
-                onUpdateInput={this.onTextChange}
-                onNewRequest={this.onNewRequest}
-                maxSearchResults={5}
-                searchText={this.state.pfam}
-            />
-            <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick} disabled={this.state.disabled}/>
+            <TextField hintText="PFAM ID" value={this.state.pfam} onChange={this.onTextChange}/>
+            <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick}/>
           </div>
           <div>OR</div>
           <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
@@ -182,9 +190,20 @@ class Main extends Component {
               <FlatButton secondary={true} label="Fetch PFAM ID" onClick={this.onPdbButtonClick}/>
               <br />
             </div>
+            <div>
+              <RefreshIndicator
+                  size={35}
+                  left={20}
+                  top={5}
+                  loadingColor="#FF9800"
+                  status={this.state.refresh}
+                  style={styles.refresh}
+              />
+            </div>
           </div>
           <div>
-            <img src={this.state.url} width="680" style={{display: this.state.url == '' ? 'none' : ''}}/>
+            <img src={this.state.url} width="680" style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
+            <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not found.</h2>
           </div>
         </div>
       </MuiThemeProvider>
