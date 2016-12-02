@@ -183,7 +183,7 @@ class Main extends Component {
                 <div style={styles.container}>
                     <h1>Contact Maps</h1>
                     <div>
-                        <TextField hintText="PFAM ID" value={this.state.pfam} onChange={this.onTextChange}/>
+                        <TextField hintText="PFAM ID" value={this.state.pfam} onChange={this.onTextChange} onEnterKeyDown={this.onPfamButtonClick}/>
                         <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick}/>
                     </div>
                     <div>OR</div>
@@ -202,7 +202,7 @@ class Main extends Component {
                         </div>
                         <div>
                             <TextField hintText={this.state.hintText} value={this.state.pdb}
-                                       onChange={this.onPdbChange}/>
+                                       onChange={this.onPdbChange} onEnterKeyDown={this.onPdbButtonClick}/>
                             <FlatButton secondary={true} label="Open Map" onClick={this.onPdbButtonClick}/>
                             <br />
                         </div>
