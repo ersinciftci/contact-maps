@@ -12,6 +12,7 @@ import axios from 'axios';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
+import {browserHistory} from 'react-router';
 
 const styles = {
     container: {
@@ -73,10 +74,12 @@ class Main extends Component {
         axios.get(this.state.url)
             .then(response => {
                 this.state.imageHidden = false;
+                browserHistory.push(this.state.pfam);
                 this.setState(this.state);
             })
             .catch(error => {
                 this.state.imageHidden = true;
+                browserHistory.push(this.state.pfam);
                 this.setState(this.state);
             });
     }
