@@ -25,6 +25,7 @@ const config = {
     output: {
         path: buildPath, // Path of output file
         filename: 'app.js',
+        publicPath: '/contact-maps'
     },
     plugins: [
         // Enables Hot Modules Replacement

@@ -74,12 +74,12 @@ class Main extends Component {
         axios.get(this.state.url)
             .then(response => {
                 this.state.imageHidden = false;
-                browserHistory.push(this.state.pfam);
+                browserHistory.push('/contact-maps/' + this.state.pfam);
                 this.setState(this.state);
             })
             .catch(error => {
                 this.state.imageHidden = true;
-                browserHistory.push(this.state.pfam);
+                browserHistory.push('/contact-maps/' + this.state.pfam);
                 this.setState(this.state);
             });
     }
