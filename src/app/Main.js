@@ -13,6 +13,7 @@ import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
 import {browserHistory} from 'react-router';
+import {Table, Column, Cell} from 'fixed-data-table';
 
 const styles = {
     container: {
@@ -182,45 +183,87 @@ class Main extends Component {
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={styles.container}>
                     <h1>Contact Maps</h1>
-                    <div>
-                        <TextField hintText="PFAM ID" value={this.state.pfam} onChange={this.onTextChange} onEnterKeyDown={this.onPfamButtonClick}/>
-                        <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick}/>
-                    </div>
-                    <div>OR</div>
+                    <br />
+                    <br />
                     <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-                        <div style={{marginRight: 10}}>
-                            <SelectField
-                                value={this.state.value}
-                                onChange={this.handleAccessionChange}
-                                style={styles.customWidth}
-                            >
-                                <MenuItem value={1} primaryText="PDB ID"/>
-                                <MenuItem value={2} primaryText="UniProt Accession"/>
-                                <MenuItem value={3} primaryText="UniProt Identifier"/>
-                                <MenuItem value={4} primaryText="InterPro Accession"/>
-                            </SelectField>
+                        <div style={{marginRight: 50}}>
+                            <div>
+                                <TextField hintText="PFAM ID" value={this.state.pfam} onChange={this.onTextChange}
+                                           onEnterKeyDown={this.onPfamButtonClick}/>
+                                <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick}/>
+                            </div>
+                            <div>OR</div>
+                            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                                <div style={{marginRight: 10}}>
+                                    <SelectField
+                                        value={this.state.value}
+                                        onChange={this.handleAccessionChange}
+                                        style={styles.customWidth}>
+                                        <MenuItem value={1} primaryText="PDB ID"/>
+                                        <MenuItem value={2} primaryText="UniProt Accession"/>
+                                        <MenuItem value={3} primaryText="UniProt Identifier"/>
+                                        <MenuItem value={4} primaryText="InterPro Accession"/>
+                                    </SelectField>
+                                </div>
+                                <div>
+                                    <TextField hintText={this.state.hintText} value={this.state.pdb}
+                                               onChange={this.onPdbChange} onEnterKeyDown={this.onPdbButtonClick}/>
+                                    <FlatButton secondary={true} label="Open Map" onClick={this.onPdbButtonClick}/>
+                                    <br />
+                                </div>
+                                <div>
+                                    <RefreshIndicator
+                                        size={35}
+                                        left={20}
+                                        top={5}
+                                        loadingColor="#FF9800"
+                                        status={this.state.refresh}
+                                        style={styles.refresh}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <img src={this.state.url} width="680"
+                                     style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
+                                <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not found.</h2>
+                            </div>
                         </div>
                         <div>
-                            <TextField hintText={this.state.hintText} value={this.state.pdb}
-                                       onChange={this.onPdbChange} onEnterKeyDown={this.onPdbButtonClick}/>
-                            <FlatButton secondary={true} label="Open Map" onClick={this.onPdbButtonClick}/>
-                            <br />
+                            <Table
+                                rowHeight={31}
+                                rowsCount={pfamList.length}
+                                width={680}
+                                height={647}
+                                headerHeight={31}>
+                                <Column
+                                    header={<Cell>Accession</Cell>}
+                                    cell={({rowIndex, ...props}) => (
+                                        <Cell {...props}>
+                                            <a href={pfamList[rowIndex].pfamA_Acc}>{pfamList[rowIndex].pfamA_Acc}</a>
+                                        </Cell>
+                                    )}
+                                    width={80}
+                                />
+                                <Column
+                                    header={<Cell>Id</Cell>}
+                                    cell={({rowIndex, ...props}) => (
+                                        <Cell {...props}>
+                                            {pfamList[rowIndex].pfamA_id}
+                                        </Cell>
+                                    )}
+                                    width={120}
+                                />
+                                <Column
+                                    header={<Cell>Description</Cell>}
+                                    cell={({rowIndex, ...props}) => (
+                                        <Cell {...props}>
+                                            {pfamList[rowIndex].description}
+                                        </Cell>
+                                    )}
+                                    width={480}
+                                />
+                            </Table>
                         </div>
-                        <div>
-                            <RefreshIndicator
-                                size={35}
-                                left={20}
-                                top={5}
-                                loadingColor="#FF9800"
-                                status={this.state.refresh}
-                                style={styles.refresh}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <img src={this.state.url} width="680"
-                             style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
-                        <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not found.</h2>
                     </div>
                 </div>
             </MuiThemeProvider>
