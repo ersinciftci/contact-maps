@@ -45,7 +45,11 @@ class Main extends Component {
         this.updateText = this.updateText.bind(this);
         this.handleAccessionChange = this.handleAccessionChange.bind(this);
         this.onStateReady = this.onStateReady.bind(this);
-        this.state = {pfam: "", pdb: "", value: 1, hintText: "PDB ID", url: "", imageHidden: false, refresh: "hide"};
+        this.onFilterChange = this.onFilterChange.bind(this);
+        this.state = {
+            pfam: "", pdb: "", value: 1, hintText: "PDB ID", url: "", imageHidden: false, refresh: "hide",
+            pfamList: pfamList
+        };
 
         if (this.props.params.pfamId) {
             this.state.pfam = this.props.params.pfamId;
@@ -178,6 +182,14 @@ class Main extends Component {
         this.updateText(event.target.value);
     }
 
+    onFilterChange(e) {
+
+        this.state.pfamList = pfamList.filter(function (value) {
+            return value.pfamA_Acc.includes(e.target.value);
+        });
+        this.setState(this.state);
+    }
+
     render() {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
@@ -228,10 +240,15 @@ class Main extends Component {
                                 <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not found.</h2>
                             </div>
                         </div>
-                        <div>
+                        <div style={{textAlign: 'initial'}}>
+                            <input
+                                onChange={this.onFilterChange}
+                                placeholder="Filter by Accession"
+                            />
+                            <br />
                             <Table
                                 rowHeight={31}
-                                rowsCount={pfamList.length}
+                                rowsCount={this.state.pfamList.length}
                                 width={680}
                                 height={647}
                                 headerHeight={31}>
@@ -239,7 +256,7 @@ class Main extends Component {
                                     header={<Cell>Accession</Cell>}
                                     cell={({rowIndex, ...props}) => (
                                         <Cell {...props}>
-                                            <a href={pfamList[rowIndex].pfamA_Acc}>{pfamList[rowIndex].pfamA_Acc}</a>
+                                            <a href={this.state.pfamList[rowIndex].pfamA_Acc}>{this.state.pfamList[rowIndex].pfamA_Acc}</a>
                                         </Cell>
                                     )}
                                     width={80}
@@ -248,7 +265,7 @@ class Main extends Component {
                                     header={<Cell>Id</Cell>}
                                     cell={({rowIndex, ...props}) => (
                                         <Cell {...props}>
-                                            {pfamList[rowIndex].pfamA_id}
+                                            {this.state.pfamList[rowIndex].pfamA_id}
                                         </Cell>
                                     )}
                                     width={120}
@@ -257,7 +274,7 @@ class Main extends Component {
                                     header={<Cell>Description</Cell>}
                                     cell={({rowIndex, ...props}) => (
                                         <Cell {...props}>
-                                            {pfamList[rowIndex].description}
+                                            {this.state.pfamList[rowIndex].description}
                                         </Cell>
                                     )}
                                     width={480}
