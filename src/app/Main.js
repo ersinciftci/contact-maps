@@ -211,7 +211,9 @@ class Main extends Component {
     onFilterChange(e) {
 
         this.state.pfamList = pfamList.filter(function (value) {
-            return value.pfamA_Acc.includes(e.target.value);
+            return value.pfamA_Acc.toUpperCase().includes(e.target.value.toUpperCase()) ||
+                value.pfamA_id.toUpperCase().includes(e.target.value.toUpperCase()) ||
+                value.description.toUpperCase().includes(e.target.value.toUpperCase());
         });
         this.setState(this.state);
     }
@@ -317,7 +319,8 @@ class Main extends Component {
                         <div style={{textAlign: 'initial'}}>
                             <input
                                 onChange={this.onFilterChange}
-                                placeholder="Filter by Accession"
+                                placeholder="Filter"
+                                style={{lineHeight: '25px', fontSize: '14px'}}
                             />
                             <br />
                             <Table
@@ -330,7 +333,7 @@ class Main extends Component {
                                     header={<Cell>Accession</Cell>}
                                     cell={({rowIndex, ...props}) => (
                                         <Cell {...props}>
-                                            <a href={this.state.pfamList[rowIndex].pfamA_Acc}>{this.state.pfamList[rowIndex].pfamA_Acc}</a>
+                                            <a title={this.state.pfamList[rowIndex].comment} href={this.state.pfamList[rowIndex].pfamA_Acc}>{this.state.pfamList[rowIndex].pfamA_Acc}</a>
                                         </Cell>
                                     )}
                                     width={80}
