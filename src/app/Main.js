@@ -14,6 +14,8 @@ import MenuItem from 'material-ui/MenuItem';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
 import {browserHistory} from 'react-router';
 import {Table, Column, Cell} from 'fixed-data-table';
+import Dialog from 'material-ui/Dialog';
+import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
 
 const styles = {
     container: {
@@ -46,9 +48,13 @@ class Main extends Component {
         this.handleAccessionChange = this.handleAccessionChange.bind(this);
         this.onStateReady = this.onStateReady.bind(this);
         this.onFilterChange = this.onFilterChange.bind(this);
+        this.handleOpen = this.handleOpen.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleRadioButtonChange = this.handleRadioButtonChange.bind(this);
         this.state = {
             pfam: "", pdb: "", value: 1, hintText: "PDB ID", url: "", imageHidden: false, refresh: "hide",
-            pfamList: pfamList
+            pfamList: pfamList, open : false, retrievedPfams : [], valueSelected : ""
         };
 
         if (this.props.params.pfamId) {
@@ -93,12 +99,17 @@ class Main extends Component {
 
         this.state.refresh = "loading";
         this.setState(this.state);
-        var value = this.state.value;
+        let value = this.state.value;
         if (value == 1) {
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + this.state.pdb)
                 .then(response => {
-                    this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
-                    this.onStateReady();
+                    this.state.retrievedPfams = Object.keys(response.data[this.state.pdb]['Pfam']);
+                    if(this.state.retrievedPfams.length > 1) {
+                        this.handleOpen();
+                    } else {
+                        this.updateText(this.state.retrievedPfams[0]);
+                        this.onStateReady();
+                    }
                 })
                 .catch(error => {
                     this.updateText('');
@@ -108,8 +119,13 @@ class Main extends Component {
         } else if (value == 2) {
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + this.state.pdb)
                 .then(response => {
-                    this.updateText(Object.keys(response.data[this.state.pdb]['Pfam'])[0]);
-                    this.onStateReady();
+                    this.state.retrievedPfams = Object.keys(response.data[this.state.pdb]['Pfam']);
+                    if(this.state.retrievedPfams.length > 1) {
+                        this.handleOpen();
+                    } else {
+                        this.updateText(this.state.retrievedPfams[0]);
+                        this.onStateReady();
+                    }
                 })
                 .catch(error => {
                     this.updateText('');
@@ -119,13 +135,18 @@ class Main extends Component {
         } else if (value == 3) {
             axios.get('http://www.uniprot.org/uniprot/' + this.state.pdb + '.xml')
                 .then(response => {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(response.data, "application/xml");
-                    var uniprotAcc = doc.documentElement.childNodes[1].childNodes[1].textContent;
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(response.data, "application/xml");
+                    let uniprotAcc = doc.documentElement.childNodes[1].childNodes[1].textContent;
                     axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + uniprotAcc)
                         .then(response => {
-                            this.updateText(Object.keys(response.data[uniprotAcc]['Pfam'])[0]);
-                            this.onStateReady();
+                            this.state.retrievedPfams = Object.keys(response.data[uniprotAcc]['Pfam']);
+                            if(this.state.retrievedPfams.length > 1) {
+                                this.handleOpen();
+                            } else {
+                                this.updateText(this.state.retrievedPfams[0]);
+                                this.onStateReady();
+                            }
                         })
                         .catch(error => {
                             this.updateText('');
@@ -141,11 +162,16 @@ class Main extends Component {
         } else if (value == 4) {
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/' + this.state.pdb)
                 .then(response => {
-                    var pdbId = Object.keys(response.data[this.state.pdb]['PDB'])[0];
+                    let pdbId = Object.keys(response.data[this.state.pdb]['PDB'])[0];
                     axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + pdbId)
                         .then(response => {
-                            this.updateText(Object.keys(response.data[pdbId]['Pfam'])[0]);
-                            this.onStateReady();
+                            this.state.retrievedPfams = Object.keys(response.data[pdbId]['Pfam']);
+                            if(this.state.retrievedPfams.length > 1) {
+                                this.handleOpen();
+                            } else {
+                                this.updateText(this.state.retrievedPfams[0]);
+                                this.onStateReady();
+                            }
                         })
                         .catch(error => {
                             this.updateText('');
@@ -190,7 +216,55 @@ class Main extends Component {
         this.setState(this.state);
     }
 
+    handleOpen() {
+        this.state.open = true;
+        this.setState(this.state);
+    };
+
+    handleClose() {
+        this.state.open = false;
+        this.setState(this.state);
+    };
+
+    handleSubmit () {
+        this.state.open = false;
+        this.updateText(this.state.valueSelected);
+        this.onStateReady();
+    }
+
+    handleRadioButtonChange(event, value) {
+        this.state.valueSelected = value;
+        this.setState(this.state);
+    }
+
     render() {
+
+        const actions = [
+            <FlatButton
+                label="Cancel"
+                primary={true}
+                onTouchTap={this.handleClose}
+            />,
+            <FlatButton
+                label="Submit"
+                primary={true}
+                keyboardFocused={true}
+                onTouchTap={this.handleSubmit}
+            />,
+        ];
+
+        const radios = [];
+        for (let i = 0; i < this.state.retrievedPfams.length; i++) {
+            radios.push(
+                <RadioButton
+                    key={i}
+                    value={`${this.state.retrievedPfams[i]}`}
+                    label={`${this.state.retrievedPfams[i]}`}
+                    style={styles.radioButton}
+                />
+            );
+        }
+
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={styles.container}>
@@ -282,6 +356,19 @@ class Main extends Component {
                             </Table>
                         </div>
                     </div>
+                    <Dialog
+                        title="Select PFAM"
+                        actions={actions}
+                        modal={false}
+                        open={this.state.open}
+                        onRequestClose={this.handleClose}
+                        autoScrollBodyContent={true}
+                    >
+                        <RadioButtonGroup name="retrievedPfamsButtons" valueSelected={this.state.valueSelected}
+                        defaultSelected={this.state.retrievedPfams[0]} onChange={this.handleRadioButtonChange}>
+                            {radios}
+                        </RadioButtonGroup>
+                    </Dialog>
                 </div>
             </MuiThemeProvider>
         );
