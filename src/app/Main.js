@@ -16,6 +16,7 @@ import {browserHistory} from 'react-router';
 import {Table, Column, Cell} from 'fixed-data-table';
 import Dialog from 'material-ui/Dialog';
 import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
+import {Tabs, Tab} from 'material-ui/Tabs';
 
 const styles = {
     container: {
@@ -52,27 +53,30 @@ class Main extends Component {
         this.handleClose = this.handleClose.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleRadioButtonChange = this.handleRadioButtonChange.bind(this);
+        this.onTabChange = this.onTabChange.bind(this);
+        this.onPfamClick = this.onPfamClick.bind(this);
+        this.onPdbClick = this.onPdbClick.bind(this);
         this.state = {
-            pfam: "", pdb: "", value: 1, hintText: "PDB ID", url: "", imageHidden: false, refresh: "hide",
-            pfamList: pfamList, open : false, retrievedPfams : [], valueSelected : ""
+            pfam: "", pdb: "", value: 1, hintText: "e.g. 1cbs", url: "", imageHidden: false, refresh: "hide",
+            pfamList: pfamList, open: false, retrievedPfams: [], valueSelected: "", tabValue: "home"
         };
 
         if (this.props.params.pfamId) {
             this.state.pfam = this.props.params.pfamId;
-            this.onPfamButtonClick();
+            this.onPfamClick();
         }
     }
 
     handleAccessionChange(event, index, value) {
 
         if (value == 1) {
-            this.state.hintText = "PDB ID";
+            this.state.hintText = "e.g. 1cbs";
         } else if (value == 2) {
-            this.state.hintText = "UniProt Accession";
+            this.state.hintText = "e.g. P29373";
         } else if (value == 3) {
-            this.state.hintText = "UniProt Identifier";
+            this.state.hintText = "e.g. RABP2_HUMAN";
         } else if (value == 4) {
-            this.state.hintText = "InterPro Accession";
+            this.state.hintText = "e.g. IPR000566";
         }
 
         this.state.value = value;
@@ -80,7 +84,15 @@ class Main extends Component {
         this.setState(this.state);
     }
 
-    onPfamButtonClick() {
+    onPfamButtonClick(event) {
+
+        if (event.keyCode == 13) {
+            this.onPfamClick();
+        }
+    }
+
+    onPfamClick() {
+
         this.state.url = "png/" + this.state.pfam + "_lh0.01_le16.0_med_min.png";
         axios.get(this.state.url)
             .then(response => {
@@ -95,7 +107,14 @@ class Main extends Component {
             });
     }
 
-    onPdbButtonClick() {
+    onPdbButtonClick(event) {
+
+        if (event.keyCode == 13) {
+            this.onPdbClick();
+        }
+    }
+
+    onPdbClick() {
 
         this.state.refresh = "loading";
         this.setState(this.state);
@@ -104,7 +123,7 @@ class Main extends Component {
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + this.state.pdb)
                 .then(response => {
                     this.state.retrievedPfams = Object.keys(response.data[this.state.pdb]['Pfam']);
-                    if(this.state.retrievedPfams.length > 1) {
+                    if (this.state.retrievedPfams.length > 1) {
                         this.handleOpen();
                     } else {
                         this.updateText(this.state.retrievedPfams[0]);
@@ -120,7 +139,7 @@ class Main extends Component {
             axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + this.state.pdb)
                 .then(response => {
                     this.state.retrievedPfams = Object.keys(response.data[this.state.pdb]['Pfam']);
-                    if(this.state.retrievedPfams.length > 1) {
+                    if (this.state.retrievedPfams.length > 1) {
                         this.handleOpen();
                     } else {
                         this.updateText(this.state.retrievedPfams[0]);
@@ -141,7 +160,7 @@ class Main extends Component {
                     axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/uniprot_to_pfam/' + uniprotAcc)
                         .then(response => {
                             this.state.retrievedPfams = Object.keys(response.data[uniprotAcc]['Pfam']);
-                            if(this.state.retrievedPfams.length > 1) {
+                            if (this.state.retrievedPfams.length > 1) {
                                 this.handleOpen();
                             } else {
                                 this.updateText(this.state.retrievedPfams[0]);
@@ -166,7 +185,7 @@ class Main extends Component {
                     axios.get('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/' + pdbId)
                         .then(response => {
                             this.state.retrievedPfams = Object.keys(response.data[pdbId]['Pfam']);
-                            if(this.state.retrievedPfams.length > 1) {
+                            if (this.state.retrievedPfams.length > 1) {
                                 this.handleOpen();
                             } else {
                                 this.updateText(this.state.retrievedPfams[0]);
@@ -189,8 +208,9 @@ class Main extends Component {
 
     onStateReady() {
         this.state.refresh = "hide";
+        this.state.tabValue = "home";
         this.setState(this.state);
-        this.onPfamButtonClick();
+        this.onPfamClick();
     }
 
     onPdbChange(event) {
@@ -228,7 +248,7 @@ class Main extends Component {
         this.setState(this.state);
     };
 
-    handleSubmit () {
+    handleSubmit() {
         this.state.open = false;
         this.updateText(this.state.valueSelected);
         this.onStateReady();
@@ -236,6 +256,11 @@ class Main extends Component {
 
     handleRadioButtonChange(event, value) {
         this.state.valueSelected = value;
+        this.setState(this.state);
+    }
+
+    onTabChange(value) {
+        this.state.tabValue = value;
         this.setState(this.state);
     }
 
@@ -271,19 +296,39 @@ class Main extends Component {
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={styles.container}>
                     <h1>Contact Maps</h1>
-                    <br />
-                    <br />
-                    <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-                        <div style={{marginRight: 50}}>
-                            <div>
-                                <TextField hintText="PFAM ID" value={this.state.pfam} onChange={this.onTextChange}
-                                           onEnterKeyDown={this.onPfamButtonClick}/>
-                                <FlatButton secondary={true} label="Open Map" onClick={this.onPfamButtonClick}/>
+                    <Tabs value={this.state.tabValue} onChange={this.onTabChange}>
+                        <Tab label="MAP" value="home">
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                paddingTop: 30
+                            }}>
+                                <div style={{display: 'flex', flexDirection: 'row'}}>
+                                    <p style={{fontSize: '16px'}}>PFAM ID:</p>
+                                    <TextField hintText="e.g. PF00001" value={this.state.pfam}
+                                               onChange={this.onTextChange}
+                                               onKeyDown={this.onPfamButtonClick} style={{marginLeft: 10}}/>
+                                    <FlatButton secondary={true} label="Open Map" onClick={this.onPfamClick} style={{marginTop: 8}}/>
+                                </div>
+                                <div>
+                                    <img src={this.state.url} width="680"
+                                         style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
+                                    <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not
+                                        found.</h2>
+                                </div>
                             </div>
-                            <div>OR</div>
-                            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                        </Tab>
+                        <Tab label="ACCESSION CONVERSION" value="convert">
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                paddingTop: 30
+                            }}>
                                 <div style={{marginRight: 10}}>
                                     <SelectField
+                                        floatingLabelText="Accession"
                                         value={this.state.value}
                                         onChange={this.handleAccessionChange}
                                         style={styles.customWidth}>
@@ -293,13 +338,15 @@ class Main extends Component {
                                         <MenuItem value={4} primaryText="InterPro Accession"/>
                                     </SelectField>
                                 </div>
-                                <div>
+                                <div style={{marginTop: 24}}>
                                     <TextField hintText={this.state.hintText} value={this.state.pdb}
-                                               onChange={this.onPdbChange} onEnterKeyDown={this.onPdbButtonClick}/>
-                                    <FlatButton secondary={true} label="Open Map" onClick={this.onPdbButtonClick}/>
+                                               onChange={this.onPdbChange}
+                                               onKeyDown={this.onPdbButtonClick}/>
+                                    <FlatButton secondary={true} label="Open Map"
+                                                onClick={this.onPdbClick}/>
                                     <br />
                                 </div>
-                                <div>
+                                <div style={{marginTop: 24}}>
                                     <RefreshIndicator
                                         size={35}
                                         left={20}
@@ -310,55 +357,62 @@ class Main extends Component {
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <img src={this.state.url} width="680"
-                                     style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
-                                <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not found.</h2>
+                        </Tab>
+                        <Tab label="PFAM LIST" value="list">
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                paddingTop: 30
+                            }}>
+                                <div style={{display: 'flex', flexDirection: 'row', lineHeight: '0px'}}>
+                                    <p style={{fontSize: '16px'}}>Search:</p>
+                                    <input
+                                        onChange={this.onFilterChange}
+                                        placeholder="Filter by accession, id or description"
+                                        style={{lineHeight: '0px', fontSize: '14px', marginLeft: 10}}
+                                        size="50"
+                                    />
+                                </div>
+                                <br />
+                                <Table
+                                    rowHeight={31}
+                                    rowsCount={this.state.pfamList.length}
+                                    width={680}
+                                    height={647}
+                                    headerHeight={31}>
+                                    <Column
+                                        header={<Cell>Accession</Cell>}
+                                        cell={({rowIndex, ...props}) => (
+                                            <Cell {...props}>
+                                                <a title={this.state.pfamList[rowIndex].comment}
+                                                   href={this.state.pfamList[rowIndex].pfamA_Acc}>{this.state.pfamList[rowIndex].pfamA_Acc}</a>
+                                            </Cell>
+                                        )}
+                                        width={80}
+                                    />
+                                    <Column
+                                        header={<Cell>Id</Cell>}
+                                        cell={({rowIndex, ...props}) => (
+                                            <Cell {...props}>
+                                                {this.state.pfamList[rowIndex].pfamA_id}
+                                            </Cell>
+                                        )}
+                                        width={120}
+                                    />
+                                    <Column
+                                        header={<Cell>Description</Cell>}
+                                        cell={({rowIndex, ...props}) => (
+                                            <Cell {...props}>
+                                                {this.state.pfamList[rowIndex].description}
+                                            </Cell>
+                                        )}
+                                        width={480}
+                                    />
+                                </Table>
                             </div>
-                        </div>
-                        <div style={{textAlign: 'initial'}}>
-                            <input
-                                onChange={this.onFilterChange}
-                                placeholder="Filter"
-                                style={{lineHeight: '25px', fontSize: '14px'}}
-                            />
-                            <br />
-                            <Table
-                                rowHeight={31}
-                                rowsCount={this.state.pfamList.length}
-                                width={680}
-                                height={647}
-                                headerHeight={31}>
-                                <Column
-                                    header={<Cell>Accession</Cell>}
-                                    cell={({rowIndex, ...props}) => (
-                                        <Cell {...props}>
-                                            <a title={this.state.pfamList[rowIndex].comment} href={this.state.pfamList[rowIndex].pfamA_Acc}>{this.state.pfamList[rowIndex].pfamA_Acc}</a>
-                                        </Cell>
-                                    )}
-                                    width={80}
-                                />
-                                <Column
-                                    header={<Cell>Id</Cell>}
-                                    cell={({rowIndex, ...props}) => (
-                                        <Cell {...props}>
-                                            {this.state.pfamList[rowIndex].pfamA_id}
-                                        </Cell>
-                                    )}
-                                    width={120}
-                                />
-                                <Column
-                                    header={<Cell>Description</Cell>}
-                                    cell={({rowIndex, ...props}) => (
-                                        <Cell {...props}>
-                                            {this.state.pfamList[rowIndex].description}
-                                        </Cell>
-                                    )}
-                                    width={480}
-                                />
-                            </Table>
-                        </div>
-                    </div>
+                        </Tab>
+                    </Tabs>
                     <Dialog
                         title="Select PFAM"
                         actions={actions}
@@ -368,13 +422,15 @@ class Main extends Component {
                         autoScrollBodyContent={true}
                     >
                         <RadioButtonGroup name="retrievedPfamsButtons" valueSelected={this.state.valueSelected}
-                        defaultSelected={this.state.retrievedPfams[0]} onChange={this.handleRadioButtonChange}>
+                                          defaultSelected={this.state.retrievedPfams[0]}
+                                          onChange={this.handleRadioButtonChange}>
                             {radios}
                         </RadioButtonGroup>
                     </Dialog>
                 </div>
             </MuiThemeProvider>
-        );
+        )
+            ;
     }
 }
 
