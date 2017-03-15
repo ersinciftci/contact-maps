@@ -33,6 +33,7 @@
     "react-dom": "15.4.2",
     "react-tap-event-plugin": "2.0.1",
     "react-router": "3.0.0",
-    "fixed-data-table": "0.6.3"
+    "fixed-data-table": "0.6.3",
+    "d3": "4.0.0"
   }
 }

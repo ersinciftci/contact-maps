@@ -17,6 +17,7 @@ import {Table, Column, Cell} from 'fixed-data-table';
 import Dialog from 'material-ui/Dialog';
 import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
 import {Tabs, Tab} from 'material-ui/Tabs';
+import evzoom from './evzoom';
 
 const styles = {
     container: {
@@ -93,6 +94,7 @@ class Main extends Component {
 
     onPfamClick() {
 
+        evzoom("json/" + this.state.pfam + ".json");
         this.state.url = "png/" + this.state.pfam + "_lh0.01_le16.0_med_min.png";
         axios.get(this.state.url)
             .then(response => {
@@ -311,11 +313,15 @@ class Main extends Component {
                                                onKeyDown={this.onPfamButtonClick} style={{marginLeft: 10}}/>
                                     <FlatButton secondary={true} label="Open Map" onClick={this.onPfamClick} style={{marginTop: 8}}/>
                                 </div>
-                                <div>
-                                    <img src={this.state.url} width="680"
-                                         style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
-                                    <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not
-                                        found.</h2>
+                                <div style={{display: 'flex', flexDirection: 'row'}}>
+                                    <div>
+                                        <img src={this.state.url} width="842"
+                                             style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}/>
+                                        <h2 style={{display: !this.state.imageHidden ? 'none' : ''}}>Contact map not
+                                            found.</h2>
+                                    </div>
+                                    <div style={{display: (this.state.url == '' || this.state.imageHidden) ? 'none' : ''}}
+                                         id="evzoom-viewer"></div>
                                 </div>
                             </div>
                         </Tab>

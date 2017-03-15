@@ -5,13 +5,16 @@ const nodeModulesPath = path.resolve(__dirname, 'node_modules');
 const TransferWebpackPlugin = require('transfer-webpack-plugin');
 
 const config = {
-    entry: [path.join(__dirname, '/src/app/app.js')],
+    entry: {
+        app: [path.join(__dirname, '/src/app/app.js')],
+        evzoom: [path.join(__dirname, '/src/app/evzoom.js')],
+    },
     // Render source-map file for final build
     devtool: 'source-map',
     // output config
     output: {
         path: buildPath, // Path of output file
-        filename: 'app.js', // Name of output file
+        filename: '[name].js', // Name of output file
     },
     plugins: [
         // Define production build to allow React to strip out unnecessary checks

@@ -6,11 +6,15 @@ const TransferWebpackPlugin = require('transfer-webpack-plugin');
 
 const config = {
     // Entry points to the project
-    entry: [
-        'webpack/hot/dev-server',
+    entry: {
+        app: ['webpack/hot/dev-server',
         'webpack/hot/only-dev-server',
         path.join(__dirname, '/src/app/app.js'),
-    ],
+        ],
+        evzoom: ['webpack/hot/dev-server',
+            'webpack/hot/only-dev-server',
+            path.join(__dirname, '/src/app/evzoom.js')],
+    },
     // Server Configuration options
     devServer: {
         contentBase: 'src/www', // Relative directory for base of server
@@ -24,7 +28,7 @@ const config = {
     devtool: 'eval',
     output: {
         path: buildPath, // Path of output file
-        filename: 'app.js',
+        filename: '[name].js',
         publicPath: '/contact-maps'
     },
     plugins: [
